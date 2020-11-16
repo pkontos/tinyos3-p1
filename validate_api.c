@@ -995,8 +995,6 @@ BOOT_TEST(test_detach_self,
 BOOT_TEST(test_join_many_threads,
 	"Test that many threads joining the same thread work ok")
 {
-
-	printf("TEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESTTTTTTTTTTTTTTTTTOOOOOOOOOOOOOOOOOOOOOOOOO\n" );
 	/* A thread to be joined */
 	int joined_thread(int argl, void* args) {
 		sleep_thread(1);
@@ -1004,12 +1002,11 @@ BOOT_TEST(test_join_many_threads,
 	}
 
 	Tid_t joined_tid = CreateThread(joined_thread, 0, NULL);
-	printf("joined thread tid = %d\n\n", joined_tid );
+	
 
 	int some_thread_joined = 0;
 
 	int joiner_thread(int argl, void* args) {
-		printf("Ckkkkk\n" );
 		int retval;
 		int rc = ThreadJoin(joined_tid,&retval);
 		if(rc==0) some_thread_joined = 1;
@@ -1019,9 +1016,8 @@ BOOT_TEST(test_join_many_threads,
 	}
 
 	for(int i=0;i<5;i++) {
-		Tid_t joiner_tid =	CreateThread(joiner_thread,0,NULL);
-		printf("CREATE THREADOOO HEREE\n" );
-		printf("joiner thread tid = %d\n", joiner_tid );
+		CreateThread(joiner_thread,0,NULL);
+		
 	}
 
 	ASSERT(some_thread_joined);

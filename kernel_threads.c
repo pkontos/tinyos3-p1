@@ -43,9 +43,9 @@ void start_thread()
   */
 Tid_t sys_CreateThread(Task task, int argl, void* args)
 {
-
+  printf("CREATE THREAD   ");
 	PCB* pcb = CURPROC;
-  int*  exitval_fail = (int*) -1;
+  //int*  exitval_fail = (int*) -1;
 
   /* Create the PTCB */
   PTCB* new_ptcb = (struct process_thread_control_block*)xmalloc(sizeof(struct process_thread_control_block));
@@ -64,6 +64,8 @@ new_ptcb->argl = argl;
 new_ptcb->args = args;
 new_ptcb->pcb = pcb;
 new_ptcb->cv = COND_INIT;
+
+//printf("task: %s\n args length: %d\n args: %s\n", task,argl,args );
 
 new_ptcb->joinable = 1;
 new_ptcb->exited = 0;
@@ -88,7 +90,8 @@ pcb->active_threads++; /*It counts the active threads of the pcb*/
 
 wakeup(tcb); /*Make the thread READY for scheduling*/
 
-return (Tid_t)new_ptcb; //(Tid_t)new_ptcb->tid;
+printf("new thread tid = %d\n", new_ptcb->tid );
+return (Tid_t)new_ptcb->tid;
   
 }
 
@@ -107,9 +110,7 @@ Tid_t sys_ThreadSelf()
   */
 int sys_ThreadJoin(Tid_t tid, int* exitval)
 {
-int*  exitval_check = (int*) -1;
-  
-  printf("THREAD JOIN\n" );
+  printf("THREAD JOIN" );
 
 	if(sys_ThreadSelf() == tid){
     printf("Thread Join self error!\n");
@@ -120,13 +121,17 @@ int*  exitval_check = (int*) -1;
   rlnode* ptcb_list_node = &(pcb->ptcb_list);
   while(ptcb_list_node != NULL) /* Check if there is a node*/
   { 
-
     //printf("Looking for node\n");
     if (ptcb_list_node->ptcb->tid == tid) /* Check if the ID is found*/
     {
       printf("found node\n");
-      if (!(ptcb_list_node->ptcb->joinable == 0)) /*Check it is joinable*/
+      if (ptcb_list_node->ptcb->joinable == 0) /*Check it is joinable*/
       {
+        printf("thread not joinable \n" );
+        return -1;
+      }
+      else 
+      { 
         printf("It is joinable\n");
         /*Count how many threads wait for this TCB*/
         ptcb_list_node->ptcb->wt_counter++;
@@ -134,12 +139,7 @@ int*  exitval_check = (int*) -1;
         {
           printf("Running thread\n");
           kernel_wait(&(ptcb_list_node->ptcb->cv), SCHED_USER);
-        }
-      }
-      else 
-      { 
-        printf("thread not joinable \n" );
-        return -1;
+        } 
       }
 
       *exitval = ptcb_list_node->ptcb->exitval; /*save the exit value*/
@@ -154,13 +154,9 @@ int*  exitval_check = (int*) -1;
       printf("Joined thread \n" );
       return 0;
     }
-    else if(exitval == exitval_check)
-    {
-      printf("Exitval fail");
-      return -1;
-    }
 
-    ptcb_list_node = ptcb_list_node->next;
+    ptcb_list_node = ptcb_list_node->node->next;
+
   }
   return -1;
 }
